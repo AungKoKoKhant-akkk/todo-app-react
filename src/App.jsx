@@ -1,94 +1,41 @@
-
-import React, { use, useEffect, useState } from 'react'
-
-import TodoInput from './TodoInput';
-import TodoItem from './TodoItem';
-import Counter from './Counter';
-import FilterTodo from './FilterTodo';
+import React, { useEffect } from 'react'
+import TodoInput from './components/TodoInput'
+import TodoItem from './components/TodoItem'
+import Counter from './components/Counter'
+import FilterTodo from './components/FilterTodo'
+import { useTodos } from './hooks/useTodos'
 
 function App() {
-  const [inputText, setText] = useState("");
-  const [todoList, setTodoList] = useState([]);
-  const [isFirstRender, setIsFirstRender] = useState(true);
-  const [filter, setFilter] = useState("all");
-  const [editingId, setEditingId] = useState(null);
-  const [editText, setEditText] = useState("");
+  // Use custom hook for all todo logic
+  const {
+    todoList,
+    inputText,
+    filter,
+    editingId,
+    editText,
+    setText,
+    setFilter,
+    setTodoList,
+    setEditText,
+    addTodoText,
+    deleteTodoItem,
+    toggleComplete,
+    getFilteredTodos,
+    startEditing,
+    saveEdit,
+    cancelEdit,
+  } = useTodos();
 
-  const addTodoText = () => {
-    if (inputText.trim() === "") return;
-
-    const newTodo = {
-      id: Date.now(),
-      text: inputText,
-      completed: false,
+  // localStorage sync
+  useEffect(() => {
+    const savedTodoList = localStorage.getItem("todoList");
+    if (savedTodoList) {
+      setTodoList(JSON.parse(savedTodoList));
     }
-
-    setTodoList([...todoList, newTodo]);
-    setText("");
-  }
-
-  const deleteTodoItem = (id) => {
-    const updatedTodoList = todoList.filter((todo) => todo.id !== id);
-    setTodoList(updatedTodoList);
-  }
-
-  const toggleComplete = (id) => {
-    const updatedTodoList = todoList.map((todo) =>
-      todo.id === id
-        ? { ...todo, completed: !todo.completed }
-        : todo
-    );
-    setTodoList(updatedTodoList);
-  }
-
-  const getFilteredTodos = () => {
-    if (filter === "active") {
-      return todoList.filter((todo) => !todo.completed);
-    }
-    if (filter === "completed") {
-      return todoList.filter((todo) => todo.completed);
-    }
-    return todoList;
-  }
-
-  // Editing State
-  const startEditing = (id, currentText) => {
-    setEditingId(id);
-    setEditText(currentText);
-  }
-
-  const saveEdit = (id) => {
-    if (editText.trim() === "") {
-      alert("Todo text cannot be empty.");
-      return;
-    }
-    const updatedTodoList = todoList.map((todo) =>
-      todo.id === id
-        ? { ...todo, text: editText }
-        : todo
-    );
-    setTodoList(updatedTodoList);
-    setEditingId(null);
-    setEditText("");
-  }
-
-  const cancelEdit = () => {
-    setEditingId(null);
-    setEditText("");
-  }
+  }, []);
 
   useEffect(() => {
-
-    const saveTodoList = localStorage.getItem("todoList");
-    if (saveTodoList) {
-      setTodoList(JSON.parse(saveTodoList));
-    }
-    setIsFirstRender(false);
-  }, [])
-
-  useEffect(() => {
-
-    if (!isFirstRender) {
+    if (todoList.length > 0) {
       localStorage.setItem("todoList", JSON.stringify(todoList));
     }
   }, [todoList])
